@@ -1,0 +1,22 @@
+# IDE
+.idea
+.vscode
+
+# custom
+.env
+
+# Mac OS X files
+.DS_Store
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# User
+.netrc
