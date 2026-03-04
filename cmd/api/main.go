@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"go-portfolio-api/config"
+	"github.com/diegotrujillor/go-portfolio-api/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
