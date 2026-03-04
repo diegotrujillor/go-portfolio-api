@@ -18,6 +18,13 @@ func main() {
 
 	router := gin.Default()
 
+	router.GET("/ping", func(c *gin.Context) {
+		log.Info().Msg("Received ping request")
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+
 	// Create HTTP server with config values
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,
