@@ -18,10 +18,10 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/ping", func(c *gin.Context) {
+	router.GET("/health", func(c *gin.Context) {
 		log.Info().Msg("Received ping request")
 		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+			"message": "Server listening on :8080",
 		})
 	})
 
