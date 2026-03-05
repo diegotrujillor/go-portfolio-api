@@ -9,6 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type HealthHandler struct{}
+
+func (h HealthHandler) Health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -18,12 +24,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/health", func(c *gin.Context) {
-		log.Info().Msg("Received ping request")
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Server listening on :8080",
-		})
-	})
+	handler := HealthHandler{}
+	router.GET("/health", handler.Health)
 
 	// Create HTTP server with config values
 	server := &http.Server{
