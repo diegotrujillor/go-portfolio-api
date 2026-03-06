@@ -26,7 +26,7 @@ func main() {
 	router := gin.Default()
 
 	// health
-	router.GET("/health", handlers.Health) // assumes you created internal/handlers/health.go earlier
+	router.GET("/health", handlers.Health)
 
 	// AI
 	router.POST("/ai/summarize", aiHandler.Summarize)
