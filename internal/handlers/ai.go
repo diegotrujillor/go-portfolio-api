@@ -2,38 +2,62 @@ package handlers
 
 import (
 	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
+	"strings"
 
 	"github.com/diegotrujillor/go-portfolio-api/internal/services"
-	"github.com/diegotrujillor/go-portfolio-api/internal/services/ai_summarize"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
-type AiHandler struct{}
+type AISummarizeRequest struct {
+	Text string `json:"text"`
+}
 
-func (h AiHandler) Summarize(c *gin.Context) {
-	req := &ai_summarize.Request{}
-	if err := c.BindJSON(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+type AISummarizeResponse struct {
+	Summary string `json:"summary"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+type AIHandler struct {
+	Ollama *services.OllamaClient
+}
+
+func NewAIHandler(ollama *services.OllamaClient) *AIHandler {
+	return &AIHandler{Ollama: ollama}
+}
+
+func (h *AIHandler) Summarize(c *gin.Context) {
+	var req AISummarizeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid JSON body"})
 		return
 	}
 
-	summary := &ai_summarize.Summary{}
-	if err := c.BindJSON(summary); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid response"})
+	req.Text = strings.TrimSpace(req.Text)
+	if req.Text == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "text is required"})
 		return
 	}
 
-	log.Info().Str("text_length", req.Text).Msg("Received summary request")
+	// Basic guardrail to avoid huge payloads early on (tune later)
+	if len(req.Text) > 20_000 {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "text is too long (max 20000 chars)"})
+		return
+	}
 
-	llmClient := services.NewAiSummarizeClient(cfg.LLM_BASE_URL, cfg.LLM_MODEL, cfg.AITimeout)
-	resp, err := llmClient.Summarize(req.Text)
+	log.Info().
+		Int("text_len", len(req.Text)).
+		Msg("ai summarize requested")
+
+	summary, err := h.Ollama.Summarize(c.Request.Context(), req.Text)
 	if err != nil {
-		log.Error().Err(err).Msg("LLM call failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "LLM call failed"})
+		log.Warn().Err(err).Msg("ai summarize failed")
+		c.JSON(http.StatusBadGateway, ErrorResponse{Error: "LLM request failed"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"summary": resp.Summary})
+	c.JSON(http.StatusOK, AISummarizeResponse{Summary: summary})
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HealthHandler struct{}
+type Health struct{}
 
-func (h HealthHandler) Health(c *gin.Context) {
+func (h Health) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

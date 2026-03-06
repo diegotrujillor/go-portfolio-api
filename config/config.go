@@ -12,9 +12,11 @@ type Config struct {
 	LogLevel     string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
-	LLMBaseURL   string
-	LLMModel     string
-	LLMTimeout   time.Duration
+
+	// AI / Ollama
+	LLMBaseURL string
+	LLMModel   string
+	LLMTimeout time.Duration
 }
 
 func Load() (Config, error) {
@@ -22,8 +24,8 @@ func Load() (Config, error) {
 		Env:        getEnv("ENV", "local"),
 		Port:       getEnv("PORT", "8080"),
 		LogLevel:   getEnv("LOG_LEVEL", "info"),
-		LLMBaseURL: getEnv("LLM_BASE_URL", "http://localhost:8080"),
-		LLMModel:   getEnv("LLM_MODEL", "default"),
+		LLMBaseURL: getEnv("LLM_BASE_URL", "http://localhost:11434"),
+		LLMModel:   getEnv("LLM_MODEL", "llama3.1"),
 	}
 
 	var err error

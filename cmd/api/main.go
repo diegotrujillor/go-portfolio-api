@@ -4,33 +4,33 @@ import (
 	"net/http"
 
 	"github.com/diegotrujillor/go-portfolio-api/config"
+	"github.com/diegotrujillor/go-portfolio-api/internal/handlers"
+	"github.com/diegotrujillor/go-portfolio-api/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
 
-type HealthHandler struct{}
-
-func (h HealthHandler) Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
-}
-
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load configuration")
+		log.Fatal().Err(err).Msg("failed to load configuration")
 	}
-	log.Info().Msgf("Loaded configuration: %+v", cfg)
+
+	ollamaClient, err := services.NewOllamaClient(cfg.LLMBaseURL, cfg.LLMModel, cfg.LLMTimeout)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to init ollama client")
+	}
+	aiHandler := handlers.NewAIHandler(ollamaClient)
 
 	router := gin.Default()
 
-	handler := HealthHandler{}
-	router.GET("/health", handler.Health)
+	// health
+	router.GET("/health", handlers.Health) // assumes you created internal/handlers/health.go earlier
 
-	aiHandler := AiHandler{}
+	// AI
 	router.POST("/ai/summarize", aiHandler.Summarize)
 
-	// Create HTTP server with config values
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      router,
@@ -38,8 +38,14 @@ func main() {
 		WriteTimeout: cfg.WriteTimeout,
 	}
 
-	log.Info().Str("port", cfg.Port).Str("env", cfg.Env).Msg("Starting API server")
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal().Err(err).Msg("Failed to start API server")
+	log.Info().
+		Str("port", cfg.Port).
+		Str("env", cfg.Env).
+		Str("llm_base_url", cfg.LLMBaseURL).
+		Str("llm_model", cfg.LLMModel).
+		Msg("starting API server")
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal().Err(err).Msg("failed to start API server")
 	}
 }
