@@ -27,6 +27,9 @@ func main() {
 	handler := HealthHandler{}
 	router.GET("/health", handler.Health)
 
+	aiHandler := AiHandler{}
+	router.POST("/ai/summarize", aiHandler.Summarize)
+
 	// Create HTTP server with config values
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,

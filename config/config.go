@@ -12,13 +12,18 @@ type Config struct {
 	LogLevel     string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	LLMBaseURL   string
+	LLMModel     string
+	LLMTimeout   time.Duration
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Env:      getEnv("ENV", "local"),
-		Port:     getEnv("PORT", "8080"),
-		LogLevel: getEnv("LOG_LEVEL", "info"),
+		Env:        getEnv("ENV", "local"),
+		Port:       getEnv("PORT", "8080"),
+		LogLevel:   getEnv("LOG_LEVEL", "info"),
+		LLMBaseURL: getEnv("LLM_BASE_URL", "http://localhost:8080"),
+		LLMModel:   getEnv("LLM_MODEL", "default"),
 	}
 
 	var err error
@@ -29,6 +34,10 @@ func Load() (Config, error) {
 	cfg.WriteTimeout, err = time.ParseDuration(getEnv("WRITE_TIMEOUT", "10s"))
 	if err != nil {
 		return Config{}, fmt.Errorf("invalid WRITE_TIMEOUT: %w", err)
+	}
+	cfg.LLMTimeout, err = time.ParseDuration(getEnv("LLM_TIMEOUT", "20s"))
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid LLM_TIMEOUT: %w", err)
 	}
 
 	return cfg, nil
